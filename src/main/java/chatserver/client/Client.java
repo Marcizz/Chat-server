@@ -1,4 +1,4 @@
-package Client;
+package chatserver.client;
 
 public class Client {
 
