@@ -2,10 +2,10 @@ package chatserver;
 
 import org.junit.Test;
 
-public class ClientTest {
+public class ServerTest {
 
 	@Test
-	public void testConnectionToServer() {
+	public void testServerLaunch() {
 		// TODO: IMPLEMENT!
 	}
 
