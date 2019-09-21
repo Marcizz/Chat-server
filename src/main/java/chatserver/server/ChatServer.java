@@ -1,6 +1,11 @@
 package chatserver.server;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -14,12 +19,19 @@ public class ChatServer {
 			server = new ServerSocket(port);
 
 			Socket socket = server.accept();
+			
+			InputStream input = socket.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
+            OutputStream output = socket.getOutputStream();
+            PrintWriter writer = new PrintWriter(output, true);
+
+            writer.println(reader.readLine());
+            
 			server.close();
 
 		} catch (IOException ex) {
 			ex.printStackTrace();
-		} finally {
 		}
 	}
 
