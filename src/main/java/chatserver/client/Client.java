@@ -4,32 +4,23 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
-@SuppressWarnings("unused")
-public class Client implements ClientMethods {
-	private ClientMethods clientMethods;
+public class Client implements Runnable {
 	private final String host = "localhost";
-	private int portNumber = 81;
+	private String userName = "";
+	private int portNumber;
+	private Socket socket;
 	
-	public Client() {	}
-	
-
-	public boolean connect(String host, int portNumber, Socket socket) {
-		// TODO Auto-generated method stub
-		return false;
+	public Client(int portNumber) {
+		this.portNumber = portNumber;		
 	}
-
-
-	public void setPortNumber(int portNumber) {
+	
+	public void run() {
 		// TODO Auto-generated method stub
 		
 	}
 
 
-	public int getPortNumber() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-	
 	
 }

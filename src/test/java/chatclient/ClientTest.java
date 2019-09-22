@@ -1,66 +1,107 @@
 package chatclient;
 
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.fail;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import chatserver.client.Client;
-import chatserver.client.ClientMethods;
+import chatserver.server.ChatServer;
 
 /***
  * 
  * @author Marcus Laitala (Marcizz) & Emil Albrektsson (Spirotris) 2019-09-21
  *
  */
-
-//@RunWith attaches a runner with the test class to initialize the test data
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(Parameterized.class)
 public class ClientTest {
 
-	// @InjectMocks annotation is used to create and inject the mock object
-	@InjectMocks
 	private Client client;
-	private final int portNumber = 2942;
+	private static ChatServer server;
+	private static final int portNumber = 27500;
+	private final String host = "localhost";
+	private Socket socket;
 
-	// @Mock annotation is used to create the mock object to be injected
-	@Mock
-	ClientMethods clientMethods;
+	PrintWriter writer;
+	BufferedReader reader;
+	String message;
 
 	@Before
 	public void setUp() {
-		client = new Client();
-	}
-	
-	/*
-	@Test
-	public void testConnectionToServer() {
+		client = new Client(portNumber);
+		server = new ChatServer(portNumber);
 
-	}
-	*/
+		try {
+			new Thread(server).start();
+			socket = new Socket(host, portNumber);
 
-	@Test
-	public void testSetAndGetPortNumber() {
-		// set and get the port number the client will use to connect to the server with
-		when(clientMethods.getPortNumber()).thenReturn(portNumber);
-		
-		client.setPortNumber(portNumber);
-		
-		
-		//test the set and get functions
-		Assert.assertEquals(Integer.valueOf(portNumber), Integer.valueOf(clientMethods.getPortNumber()));
-		
-		/*
-		client.setPortNumber(portNumber);
-		int actual = client.getPortNumber();
+			// SocketSender
+			writer = new PrintWriter(socket.getOutputStream(), true);
 
-		assertEquals(portNumber, actual);
-		 */
+			// SocketListener
+			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+		} catch (Exception e) {
+			System.err.println(e.getLocalizedMessage());
+		}
+
+		message = "Test";
 	}
 
+	@AfterClass
+	public void StopOngoingProcesses() {
+		server.stopServer();
+	}
+
+	@Test(timeout = 5000)
+	public void testClientIsSendingConnectionRequest() {
+		Assert.assertFalse(socket.isClosed());
+	}
+
+	@Test(timeout = 5000)
+	public void testConnectionToServerAndSendingAMessage() {
+		try {
+			writer.println(message);
+			String actual = reader.readLine();
+			Assert.assertTrue(message.contentEquals(actual));
+
+			reader.close();
+			socket.close();
+
+		} catch (IOException e) {
+			fail(e.getLocalizedMessage());
+		}
+	}
+/*
+	@Test(timeout = 7000)
+	public void testSendingMultipleMessages() {
+		String[] messages = new String[1];
+		try {
+			writer.println(message);
+			String actual = reader.readLine();
+			Assert.assertTrue(message.contentEquals(actual));
+
+		} catch (IOException e) {
+			fail(e.getLocalizedMessage());
+		} finally {
+			try {
+				reader.close();
+				socket.close();
+			} catch (Exception e2) {
+				fail(e2.getLocalizedMessage());
+			}
+		}
+	}
+*/
 }
