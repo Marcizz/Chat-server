@@ -13,7 +13,6 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -21,9 +20,9 @@ import chatserver.server.ChatServer;
 
 public class ServerTest {
 
-	private static ChatServer server;
+	static ChatServer server;
 	String testServerIp = "127.0.0.1";
-	private static int testServerPort = 27510;
+	static int testServerPort = 27510;
 
 	@BeforeClass
 	public static void startServer() {
@@ -31,11 +30,6 @@ public class ServerTest {
 		new Thread(server).start();
 	}
 	
-	@AfterClass
-	public static void stopServer() {
-		server.stopServer();
-	}
-
 	@Test(timeout = 2000)
 	public void testServerAcceptsConnections() {
 		try {
@@ -73,7 +67,7 @@ public class ServerTest {
 
 	@Test(timeout = 2000)
 	public void testServerSendsMessageBetweenClients() {
-		String testMsg = "message from first client";
+		String testMsg = "testMessageToAnotherClient";
 		try {
 			Socket client1 = new Socket(testServerIp, testServerPort);
 			Socket client2 = new Socket(testServerIp, testServerPort);
@@ -92,10 +86,12 @@ public class ServerTest {
 			String response = reader.readLine();
 
 			assertTrue(testMsg.contentEquals(response));
+
 			client1.close();
 			client2.close();
 		} catch (Exception e) {
 			fail(e.getLocalizedMessage());
 		}
 	}
+	
 }
