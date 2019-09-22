@@ -9,7 +9,7 @@ import java.util.List;
 public class ChatServer implements Runnable {
 	protected List<String> users = new ArrayList<String>();
 	protected List<HandleClient> clients = new ArrayList<HandleClient>();
-	ServerSocket server;
+	private ServerSocket server;
 	private int port;
 
 	public ChatServer(int port) {
@@ -36,15 +36,13 @@ public class ChatServer implements Runnable {
 		try {
 			process(port);
 		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			stopServer();
+			System.err.println("Unable to start server: " + e.getLocalizedMessage());
 		}
-
 	}
 
 	public void stopServer() {
 		try {
+			System.out.println("Server Shutdown...");
 			server.close();
 		} catch (IOException e) {
 			System.err.println("Error attempting to close server: " + e.getLocalizedMessage());

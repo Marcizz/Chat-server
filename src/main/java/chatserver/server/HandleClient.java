@@ -15,36 +15,29 @@ public class HandleClient extends Thread {
 		input = new BufferedReader(new InputStreamReader(client.getInputStream()));
 		output = new PrintWriter(client.getOutputStream(), true);
 		this.server = server;
-		userName = "U" + System.currentTimeMillis();
-		server.users.add(userName); // add to vector
-		start();
+		userName = "user" + server.users.size();
+		server.users.add(userName);
+		this.start();
 	}
 
 	public void sendMessage(String userName, String msg) {
 		output.println(msg);
 	}
 
-	public String getUserName() {
-		return userName;
-	}
-
 	public void run() {
 		String line;
 		try {
+
 			while (true) {
 				line = input.readLine();
-				if (line.equals("quit")) {
-					server.clients.remove(this);
-					server.users.remove(userName);
-					break;
-				}
+				sleep(20);
 				if (line != null) {
 					server.broadcast(userName, line);
 				}
-
 			}
+
 		} catch (Exception ex) {
-			System.err.println(">>> " + getClass() + " : " + ex.getMessage());
+			System.err.println("ERROR >>> " + getClass() + " : " + ex.getLocalizedMessage());
 		}
 	}
 }
