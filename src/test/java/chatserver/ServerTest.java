@@ -13,11 +13,16 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import chatserver.server.ChatServer;
 
+
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ServerTest {
 
 	static ChatServer server;
@@ -27,11 +32,16 @@ public class ServerTest {
 	@BeforeClass
 	public static void startServer() {
 		server = new ChatServer(testServerPort);
-		new Thread(server).start();
+		//new Thread(server).start();
 	}
-	
-	@Test(timeout = 2000)
-	public void testServerAcceptsConnections() {
+
+	@AfterClass
+	public static void cleanupServer() {
+		server.stopServer();
+	}
+
+	@Test(timeout = 1000)
+	public void test1ServerAcceptsConnections() {
 		try {
 			Socket client = new Socket(testServerIp, testServerPort);
 			assertFalse(client.isClosed());
@@ -43,8 +53,8 @@ public class ServerTest {
 		}
 	}
 
-	@Test(timeout = 5000)
-	public void testServerReturnsMessagesToClient() {
+	@Test(timeout = 1000)
+	public void test2ServerReturnsMessagesToClient() {
 		String testMsg = "abcdef";
 		try {
 			Socket client = new Socket(testServerIp, testServerPort);
@@ -58,24 +68,24 @@ public class ServerTest {
 			writer.println(testMsg);
 			String response = reader.readLine();
 
-			assertTrue(testMsg.contentEquals(response));
+			assertTrue(response.contains(testMsg));
 			client.close();
 		} catch (Exception e) {
 			fail(e.getLocalizedMessage());
 		}
 	}
 
-	@Test(timeout = 2000)
-	public void testServerSendsMessageBetweenClients() {
+	@Test(timeout = 1000)
+	public void test3ServerSendsMessageBetweenClients() {
 		String testMsg = "testMessageToAnotherClient";
 		try {
+			
+			// Setup clients & streams: client1 send, client2 receive
 			Socket client1 = new Socket(testServerIp, testServerPort);
-			Socket client2 = new Socket(testServerIp, testServerPort);
-
-			// Setup streams: client1 send, client2 receive
 			OutputStream out = client1.getOutputStream();
 			PrintWriter writer = new PrintWriter(out, true);
 
+			Socket client2 = new Socket(testServerIp, testServerPort);
 			InputStream in = client2.getInputStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
@@ -85,7 +95,9 @@ public class ServerTest {
 			// Check response from client2
 			String response = reader.readLine();
 
-			assertTrue(testMsg.contentEquals(response));
+			System.out.println("testMsg:" + testMsg + " response:" + response);
+
+			assertTrue(response.contains(testMsg));
 
 			client1.close();
 			client2.close();
@@ -93,5 +105,5 @@ public class ServerTest {
 			fail(e.getLocalizedMessage());
 		}
 	}
-	
+
 }

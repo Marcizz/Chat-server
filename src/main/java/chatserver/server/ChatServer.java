@@ -7,34 +7,39 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ChatServer implements Runnable {
-	protected List<String> users = new ArrayList<String>();
-	protected List<HandleClient> clients = new ArrayList<HandleClient>();
-	private ServerSocket server;
-	private int port;
+	protected List<String> userList = new ArrayList<String>();
+	protected List<HandleClient> clientList = new ArrayList<HandleClient>();
+	private ServerSocket serverSocket;
+	private int serverPort;
 
 	public ChatServer(int port) {
-		this.port = port;
+		this.serverPort = port;
 	}
 
-	private void process(int port) throws Exception {
-		server = new ServerSocket(port);
+	/*
+	 * The first line a client sends is used as as identifier and username in the chat.
+	 */
+	private void launchServer(int port) throws Exception {
+		serverSocket = new ServerSocket(port);
 		System.out.println("Server Started...");
+		
 		while (true) {
-			Socket client = server.accept();
-			HandleClient newUser = new HandleClient(client, this);
-			clients.add(newUser);
+			Socket connectingClient = serverSocket.accept();
+			HandleClient newUser = new HandleClient(connectingClient, this);
+			clientList.add(newUser);
 		}
+		
 	}
 
 	protected void broadcast(String user, String message) {
-		for (HandleClient client : clients) {
+		for (HandleClient client : clientList) {
 			client.sendMessage(user, message);
 		}
 	}
 
 	public void run() {
 		try {
-			process(port);
+			launchServer(serverPort);
 		} catch (Exception e) {
 			System.err.println("Unable to start server: " + e.getLocalizedMessage());
 		}
@@ -43,10 +48,9 @@ public class ChatServer implements Runnable {
 	public void stopServer() {
 		try {
 			System.out.println("Server Shutdown...");
-			server.close();
+			serverSocket.close();
 		} catch (IOException e) {
 			System.err.println("Error attempting to close server: " + e.getLocalizedMessage());
 		}
 	}
-
 }

@@ -4,23 +4,29 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 public class HandleClient extends Thread {
-	String userName = "";
-	BufferedReader input;
-	PrintWriter output;
-	ChatServer server;
+	private String userName = "";
+	private BufferedReader input;
+	private PrintWriter output;
+	private ChatServer server;
 
 	public HandleClient(Socket client, ChatServer server) throws Exception {
 		input = new BufferedReader(new InputStreamReader(client.getInputStream()));
 		output = new PrintWriter(client.getOutputStream(), true);
 		this.server = server;
-		userName = "user" + server.users.size();
-		server.users.add(userName);
+		this.userName = input.readLine();
+		server.userList.add(userName);
+		sendSystemMessage(userName + " has entered the channel.");
 		this.start();
 	}
 
 	public void sendMessage(String userName, String msg) {
+		output.println("<" + userName + "> " + msg);
+	}
+
+	public void sendSystemMessage(String msg) {
 		output.println(msg);
 	}
 
@@ -30,14 +36,25 @@ public class HandleClient extends Thread {
 
 			while (true) {
 				line = input.readLine();
-				sleep(20);
+				TimeUnit.MILLISECONDS.sleep(20);
+				
 				if (line != null) {
-					server.broadcast(userName, line);
+					if (line.contains("exit")) {
+						server.userList.remove(userName);
+						server.clientList.remove(this);
+						break;
+					} else if (!line.isEmpty()) {
+						server.broadcast(userName, line);
+					}
 				}
 			}
-
 		} catch (Exception ex) {
 			System.err.println("ERROR >>> " + getClass() + " : " + ex.getLocalizedMessage());
+			ex.printStackTrace();
+		} finally {
+			System.out.println("Disconnected from server.");
+			sendSystemMessage(userName + " has left the server.");
 		}
+
 	}
 }
