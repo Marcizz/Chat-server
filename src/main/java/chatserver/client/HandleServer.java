@@ -13,11 +13,12 @@ public class HandleServer extends Thread {
 	PrintWriter output;
 
 	private final static String CLIENT_STARTED = "Client started...", EXIT_TEXT = "exit", QUIT_TEXT = "quit",
-			ASK_FOR_USER_NAME = "Enter you username:\n", USERNAME_REGISTERED_ON_SERVER = "\nUsername sent to server";
+			CONNECTION_CLOSED_BY_USER_REQUEST = "Connection closed", ASK_FOR_USER_NAME = "Enter you username: ",
+			USERNAME_REGISTERED_ON_SERVER = "Username sent to server";
 	private String userName = "";
-	private static final int MILLIS_WAIT_BETWEEN_MESSAGES = 100;
 	private boolean exit = false;
 	private Socket server;
+	private Thread readingService;
 
 	public HandleServer(Socket server) throws IOException {
 		this.server = server;
@@ -25,13 +26,15 @@ public class HandleServer extends Thread {
 		userInput = new BufferedReader(new InputStreamReader(System.in));
 		output = new PrintWriter(server.getOutputStream(), true);
 		System.out.println(CLIENT_STARTED);
+
+		setUserNameAndSendToServer();
+		System.out.println(USERNAME_REGISTERED_ON_SERVER);
+		setupReadingService();
 		this.start();
 	}
 
 	public void readMessage() throws IOException {
-		if (input.ready()) {
-			System.out.println(input.readLine());
-		}
+		System.out.println(input.readLine());
 	}
 
 	public void sendMessage(String message) throws IOException {
@@ -39,46 +42,41 @@ public class HandleServer extends Thread {
 			return;
 		} else if (message.equalsIgnoreCase((EXIT_TEXT)) || message.equalsIgnoreCase((QUIT_TEXT))) {
 			exit = true;
-			// TODO: Add text sending that the user has exited to server
+			System.out.println(CONNECTION_CLOSED_BY_USER_REQUEST);
 			return;
 		}
 		output.println(message);
 	}
 
 	public void setUserNameAndSendToServer() throws IOException {
-		System.out.println(ASK_FOR_USER_NAME);
+		System.out.print(ASK_FOR_USER_NAME);
 		userName = userInput.readLine();
 		output.println(userName);
 	}
 
+	public void setupReadingService() {
+		// Start new thread for sending messages
+		// Sending and receiving can now be done asynchronously/without interrupting
+		// eachother
+		readingService = new Thread(new Runnable() {
+			public void run() {
+				try {
+					while (true) {
+						readMessage();
+					}
+				} catch (IOException e) {
+					System.err.println(getClass() + " : " + e.getLocalizedMessage() + "\n" + e.getStackTrace());
+					e.printStackTrace();
+				}
+			}
+		});
+		readingService.start();
+	}
+
 	public void run() {
 		try {
-			setUserNameAndSendToServer();
-			System.out.println(userName + USERNAME_REGISTERED_ON_SERVER);
-			
-			//Start new thread for sending messages
-			//Now sending and receiving can be done asynchronously/without interrupting eachother
-			Thread t1 = new Thread(new Runnable() {
-				public void run() {
-					try {
-						sendMessage(userInput.readLine());
-						sleep(MILLIS_WAIT_BETWEEN_MESSAGES);
-					} catch (IOException e) {
-						System.err.println(getClass() + " : " + e.getLocalizedMessage() + "\n" + e.getStackTrace());
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						System.err.println(getClass() + " : " + e.getLocalizedMessage() + "\n" + e.getStackTrace());
-					}
-
-				}
-			});
-			t1.start();
-			
 			while (!exit) {
 				sendMessage(userInput.readLine());
-				sleep(MILLIS_WAIT_BETWEEN_MESSAGES);
-				// Waits to read a message from server until user input is complete
-				readMessage();
 			}
 		} catch (Exception e) {
 			System.err.println(getClass() + " : " + e.getLocalizedMessage() + "\n" + e.getStackTrace());

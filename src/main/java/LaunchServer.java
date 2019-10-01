@@ -2,7 +2,7 @@ import chatserver.server.ChatServer;
 
 public class LaunchServer {
 	public static void main(String[] args) {
-		ChatServer server = new ChatServer(8080);
+		ChatServer server = new ChatServer(55555);
 		new Thread(server).start();
 	}
 
