@@ -18,18 +18,15 @@ public class HandleClient extends Thread {
 		this.server = server;
 		this.userName = input.readLine();
 		server.userList.add(userName);
-		sendSystemMessage(userName + " has entered the channel.");
+		server.broadcast(userName, " has entered the channel.");
 		this.start();
 	}
 
 	public void sendMessage(String userName, String msg) {
-		output.println("<" + userName + "> " + msg);
+		output.println(userName + ": " + msg);
 	}
 
-	public void sendSystemMessage(String msg) {
-		output.println(msg);
-	}
-
+	@Override
 	public void run() {
 		String line;
 		try {
@@ -37,23 +34,18 @@ public class HandleClient extends Thread {
 			while (true) {
 				line = input.readLine();
 				TimeUnit.MILLISECONDS.sleep(20);
-				
+
 				if (line != null) {
-					if (line.contains("exit")) {
-						server.userList.remove(userName);
-						server.clientList.remove(this);
-						break;
-					} else if (!line.isEmpty()) {
-						server.broadcast(userName, line);
-					}
+					server.broadcast(userName, line);
 				}
 			}
 		} catch (Exception ex) {
 			System.err.println("ERROR >>> " + getClass() + " : " + ex.getLocalizedMessage());
-			ex.printStackTrace();
 		} finally {
 			System.out.println("Disconnected from server.");
-			sendSystemMessage(userName + " has left the server.");
+			server.broadcast(userName, " has left the server.");
+			server.userList.remove(userName);
+			server.clientList.remove(this);
 		}
 
 	}
