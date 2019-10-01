@@ -1,13 +1,7 @@
-import chatserver.client.*;
-import chatserver.server.*;
-public class main {	
+package chatserver.client;
 
+public class LaunchClient {
 	public static void main(String[] args) {
-		ChatClient client;
-		ChatServer server;		
-		int port = 44447;
-		server = new ChatServer(port);
-		new Thread(server).start();
-		client = new ChatClient(port);
+		ChatClient client = new ChatClient("127.0.0.1", 55555);
 	}
 }

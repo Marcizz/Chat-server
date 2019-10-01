@@ -8,18 +8,29 @@ public class ChatClient {
 	private String serverName = "127.0.0.1";
 	private final static String ERROR_FINDING_SERVER = "Adress of server not found",
 			IO_ERROR = "Input or output got interrupted ";
-	private handleServer server;
+	private HandleServer server;
 	private Socket socket;
+	private int portNumber;
 
 	public ChatClient(int portNumber) {
+		this.portNumber = portNumber;
+		initiateClient();
+	}
+
+	public ChatClient(String serverName, int portNumber) {
+		this.serverName = serverName;
+		this.portNumber = portNumber;
+		initiateClient();
+	}
+
+	public void initiateClient() {
 		try {
 			System.out.println("Connecting to " + serverName + " on port " + portNumber);
 			socket = new Socket(serverName, portNumber);
 			System.out.println("Just connected to " + socket.getRemoteSocketAddress());
-			server = new handleServer(socket);
+			server = new HandleServer(socket);
 		} catch (UnknownHostException e) {
-			System.err.println(ERROR_FINDING_SERVER + ":\n" + e.getLocalizedMessage());
-			e.printStackTrace();
+			System.err.println(ERROR_FINDING_SERVER + ":\n" + e.getLocalizedMessage() + e.getStackTrace());			
 			stopClient();
 		} catch (IOException e) {
 			System.err.println(IO_ERROR + ":\n" + e.getLocalizedMessage() + e.getStackTrace());
@@ -43,7 +54,7 @@ public class ChatClient {
 		}
 	}
 
-	public handleServer getServer() {
+	public HandleServer getServer() {
 		return server;
 	}
 
