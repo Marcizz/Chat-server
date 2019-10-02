@@ -1,3 +1,5 @@
+package chatserver;
+
 import chatserver.server.ChatServer;
 
 public class LaunchServer {
