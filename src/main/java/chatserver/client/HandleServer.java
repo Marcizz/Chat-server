@@ -14,7 +14,8 @@ public class HandleServer extends Thread {
 
 	private final static String CLIENT_STARTED = "Client started...", EXIT_TEXT = "exit", QUIT_TEXT = "quit",
 			CONNECTION_CLOSED_BY_USER_REQUEST = "Connection closed", ASK_FOR_USER_NAME = "Enter you username: ",
-			USERNAME_REGISTERED_ON_SERVER = "Username sent to server";
+			USERNAME_REGISTERED_ON_SERVER = "Username sent to server",
+			PROGRAM_SHUTTING_DOWN = "Program is now closed...";
 	private String userName = "";
 	private boolean exit = false;
 	private Socket server;
@@ -61,12 +62,18 @@ public class HandleServer extends Thread {
 		readingService = new Thread(new Runnable() {
 			public void run() {
 				try {
-					while (true) {
+					while (!exit) {
 						readMessage();
 					}
+					server.shutdownInput();
 				} catch (IOException e) {
 					System.err.println(getClass() + " : " + e.getLocalizedMessage() + "\n" + e.getStackTrace());
-					e.printStackTrace();
+				} finally {
+					try {
+						server.shutdownOutput();
+					} catch (IOException e) {
+						System.err.println(getClass() + " : " + e.getLocalizedMessage() + "\n" + e.getStackTrace());
+					}
 				}
 			}
 		});
@@ -78,6 +85,10 @@ public class HandleServer extends Thread {
 			while (!exit) {
 				sendMessage(userInput.readLine());
 			}
+			server.shutdownOutput();
+			server.close();
+			System.out.println(PROGRAM_SHUTTING_DOWN);
+			System.exit(NORM_PRIORITY);
 		} catch (Exception e) {
 			System.err.println(getClass() + " : " + e.getLocalizedMessage() + "\n" + e.getStackTrace());
 			try {

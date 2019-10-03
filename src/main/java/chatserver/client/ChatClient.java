@@ -7,7 +7,7 @@ import java.net.UnknownHostException;
 public class ChatClient {
 	private String serverName = "127.0.0.1";
 	private final static String ERROR_FINDING_SERVER = "Adress of server not found",
-			IO_ERROR = "Input or output got interrupted ";
+			IO_ERROR = "Input or output got interrupted", HOW_TO_EXIT = "Type exit to shutdown the program", PROGRAM_SHUTTING_DOWN = "Program is now closed...";
 	private HandleServer server;
 	private Socket socket;
 	private int portNumber;
@@ -28,9 +28,10 @@ public class ChatClient {
 			System.out.println("Connecting to " + serverName + " on port " + portNumber);
 			socket = new Socket(serverName, portNumber);
 			System.out.println("Just connected to " + socket.getRemoteSocketAddress());
+			System.out.println("Client up and running" + "\n" + HOW_TO_EXIT);
 			server = new HandleServer(socket);
 		} catch (UnknownHostException e) {
-			System.err.println(ERROR_FINDING_SERVER + ":\n" + e.getLocalizedMessage() + e.getStackTrace());			
+			System.err.println(ERROR_FINDING_SERVER + ":\n" + e.getLocalizedMessage() + e.getStackTrace());
 			stopClient();
 		} catch (IOException e) {
 			System.err.println(IO_ERROR + ":\n" + e.getLocalizedMessage() + e.getStackTrace());
@@ -38,16 +39,18 @@ public class ChatClient {
 		} catch (Exception e) {
 			System.err.println(e.getLocalizedMessage() + ":\n" + e.getStackTrace());
 			stopClient();
-		} finally {
-			System.out.println("Client up and running");
 		}
 	}
 
 	public void stopClient() {
 		if (!socket.isClosed()) {
 			try {
-				socket.close();
 				server.setExit(true);
+				socket.shutdownInput();
+				socket.shutdownOutput();				
+				socket.close();
+				System.out.println(PROGRAM_SHUTTING_DOWN);
+				System.exit(java.lang.Thread.NORM_PRIORITY);	
 			} catch (IOException e) {
 				System.err.println(getClass() + " : " + e.getLocalizedMessage() + "\n" + e.getStackTrace());
 			}
